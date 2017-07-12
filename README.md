@@ -1,4 +1,12 @@
 # langton
 Lagton Ant
+
 Current build:
-https://yadi.sk/d/qHo5XSG63KkpoN
+
+X64:
+https://yadi.sk/d/QWVbfSxn3KrQZk
+
+X86:
+https://yadi.sk/d/R14JGNA63Kyoyy
+
+More info on wiki

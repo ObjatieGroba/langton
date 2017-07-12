@@ -359,3 +359,10 @@ void MainWindow::on_startstopButton_clicked(bool checked)
         pause(true);
     }
 }
+
+void MainWindow::on_pushButton_clicked()
+{
+    centerX = AntX;
+    centerY = AntY;
+    thread_r.render(centerX, centerY, curScale, size());
+}

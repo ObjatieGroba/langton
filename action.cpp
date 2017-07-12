@@ -141,6 +141,8 @@ void ActionThread::run() {
                 }
             }
         }
+        if (abort)
+            return;
         //qDebug("didd");
         if (*sync) {
             emit did();
