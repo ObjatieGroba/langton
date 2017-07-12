@@ -21,8 +21,12 @@ public:
     ~RenderThread();
 
     void set_net(bool checked);
+    void set_trTile(bool checked);
+    void set_colortrTile(bool checked);
     void render(double centerX, double centerY, double scaleFactor, QSize resultSize, bool need_restart = true);
-    void set_data(std::vector<std::vector<char>>* data, unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay, bool * sync, size_t * did_steps, size_t * need_steps);
+    void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways,
+                  unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
+                  bool * sync, size_t * did_steps, size_t * need_steps);
 
 signals:
     void renderedImage(const QImage &image, double scaleFactor);
@@ -35,6 +39,8 @@ private:
     QImage image;
     bool new_image;
     bool need_net;
+    bool trTile;
+    bool colorTrTile;
     QWaitCondition condition;
     double centerX;
     double centerY;
@@ -44,6 +50,7 @@ private:
     bool abort;
     std::vector<unsigned int> colors;
     std::vector<std::vector<char>>* data;
+    std::vector<bool>* ways;
     unsigned int* AntX;
     unsigned int* AntY;
     unsigned int* AntWay;

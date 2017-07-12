@@ -6,5 +6,8 @@
         <file>images/settings.png</file>
         <file>images/play.png</file>
         <file>images/stop.png</file>
+        <file>images/tr.png</file>
+        <file>images/tr2.png</file>
+        <file>images/ant2.png</file>
     </qresource>
 </RCC>

@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     statusBar()->addWidget(paintB, 0);
 
     connect(&thread_r, SIGNAL(renderedImage(QImage,double)), this, SLOT(updatePixmap(QImage,double)));
-    thread_r.set_data(&data, &AntX, &AntY, &AntWay, &sync, &did_steps, &need_steps);
+    thread_r.set_data(&data, &ways, &AntX, &AntY, &AntWay, &sync, &did_steps, &need_steps);
     connect(&thread_a, SIGNAL(did()), this, SLOT(render_again()));
     thread_a.set_data(&data, &ways, &ColorsNum, &AntX, &AntY, &AntWay, &did_steps, &need_steps, &sync);
 
@@ -365,4 +365,15 @@ void MainWindow::on_pushButton_clicked()
     centerX = AntX;
     centerY = AntY;
     thread_r.render(centerX, centerY, curScale, size());
+}
+
+void MainWindow::on_TruchetButton_clicked(bool checked)
+{
+    thread_r.set_trTile(checked);
+    ui->ColorTruchetButton->setDisabled(!checked);
+}
+
+void MainWindow::on_ColorTruchetButton_clicked(bool checked)
+{
+    thread_r.set_colortrTile(checked);
 }

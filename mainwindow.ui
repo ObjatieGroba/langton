@@ -25,7 +25,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>130</y>
+      <y>160</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -45,7 +45,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>160</y>
+      <y>190</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -123,8 +123,8 @@
    <widget class="MyPushButton" name="startstopButton">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>220</y>
+      <x>40</x>
+      <y>40</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -155,7 +155,7 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>50</width>
+      <width>55</width>
       <height>25</height>
      </rect>
     </property>
@@ -175,8 +175,8 @@
    <widget class="MyPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>250</y>
+      <x>40</x>
+      <y>70</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -196,6 +196,64 @@
       <width>19</width>
       <height>19</height>
      </size>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="TruchetButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Truchet tiles&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/tr2.png</normaloff>
+      <normalon>:/images/tr.png</normalon>:/images/tr2.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="ColorTruchetButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>100</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;colored Truchet tiles&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
