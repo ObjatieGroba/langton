@@ -6,7 +6,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-const unsigned int DefaultSize = 30000;
+const unsigned int DefaultSize = 10000;
 const double DefaultCenterX = DefaultSize / 2;
 const double DefaultCenterY = DefaultSize / 2;
 const double DefaultScale = 0.125f;
@@ -48,12 +48,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(&thread_a, SIGNAL(did()), this, SLOT(render_again()));
     thread_a.set_data(&data, &ways, &ColorsNum, &AntX, &AntY, &AntWay, &did_steps, &need_steps, &sync);
 
+    ui->ColorTruchetButton->setVisible(false);
+    ui->FillTruchetButton->setVisible(false);
+
     setWindowTitle(tr("Langton's ant"));
 #ifndef QT_NO_CURSOR
     setCursor(Qt::CrossCursor);
 #endif
 
     connect(&settings, SIGNAL(new_rule(std::vector<bool>)), this, SLOT(set_rule(std::vector<bool>)));
+    connect(&settings, SIGNAL(canceled()), this, SLOT(set_active()));
+
+    connect(&photoSaver, SIGNAL(finished()), this, SLOT(set_active()));
+    connect(&photoSaver, SIGNAL(specialRender(double,double,double,QSize)),
+            this, SLOT(specialRenderStart(double,double,double,QSize)));
+    connect(&thread_r, SIGNAL(specialRender(QImage)), this, SLOT(specialRenderFinished(QImage)));
+
     std::string s;
     for (size_t i = 0; i != ColorsNum; ++i) {
         if (ways[i]) {
@@ -76,6 +86,7 @@ void MainWindow::start_action() {
 }
 
 void MainWindow::pause(bool end) {
+    thread_r.stop();
     thread_a.stop(end);
     if (ui->startstopButton->isChecked()) {
         ui->startstopButton->setChecked(false);
@@ -179,6 +190,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         pause(true);
         need_steps += 1;
         start_action();
+        render_again();
         break;
     case Qt::Key_Minus:
         if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
@@ -190,6 +202,17 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             need_steps -= 1;
             start_action();
         }
+        render_again();
+        break;
+    case Qt::Key_Space:
+        if (ui->startstopButton->isChecked()) {
+            ui->startstopButton->setChecked(false);
+            on_startstopButton_clicked(false);
+        } else {
+            ui->startstopButton->setChecked(true);
+            on_startstopButton_clicked(true);
+        }
+        render_again();
         break;
     default:
         QWidget::keyPressEvent(event);
@@ -289,8 +312,17 @@ void MainWindow::zoom(double zoomFactor)
     thread_r.render(centerX, centerY, curScale, size());
 }
 
+void MainWindow::specialRenderFinished(const QImage &image) {
+    photoSaver.set_photo(image);
+}
+
+void MainWindow::specialRenderStart(double centerX, double centerY, double scale, QSize size) {
+    thread_r.render(centerX, centerY, scale, size, true, true);
+}
+
 void MainWindow::set_active() {
     this->setEnabled(true);
+    render_again();
 }
 
 void MainWindow::scroll(int deltaX, int deltaY)
@@ -362,18 +394,35 @@ void MainWindow::on_startstopButton_clicked(bool checked)
 
 void MainWindow::on_pushButton_clicked()
 {
-    centerX = AntX;
-    centerY = AntY;
+    centerX = AntX + 0.5f;
+    centerY = AntY + 0.5f;
     thread_r.render(centerX, centerY, curScale, size());
 }
 
 void MainWindow::on_TruchetButton_clicked(bool checked)
 {
     thread_r.set_trTile(checked);
-    ui->ColorTruchetButton->setDisabled(!checked);
+    ui->ColorTruchetButton->setVisible(checked);
+    ui->FillTruchetButton->setVisible(checked);
 }
 
 void MainWindow::on_ColorTruchetButton_clicked(bool checked)
 {
-    thread_r.set_colortrTile(checked);
+    thread_r.set_colorTrTile(checked);
+}
+
+void MainWindow::on_FillTruchetButton_clicked(bool checked)
+{
+    thread_r.set_fillTrTile(checked);
+    this->setFocus();
+}
+
+void MainWindow::on_SavePic_clicked()
+{
+    pause(true);
+    this->setEnabled(false);
+    photoSaver.set_photo(pixmap.toImage());
+    std::pair<std::pair<unsigned int, unsigned int>, std::pair<double, double>> p = thread_a.get_used_size();
+    photoSaver.set_used_size(p.first.first, p.first.second, p.second.first, p.second.second);
+    photoSaver.show();
 }

@@ -15,6 +15,7 @@ public:
     ActionThread(QObject *parent = 0);
     ~ActionThread();
 
+    std::pair<std::pair<unsigned int, unsigned int>, std::pair<double, double>> get_used_size();
     void stop(bool end=false);
     void go();
     void clear();

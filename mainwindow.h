@@ -9,6 +9,7 @@
 #include "render.h"
 #include "action.h"
 #include "settings.h"
+#include "photosaver.h"
 #include "mypushbutton.h"
 #include <vector>
 
@@ -48,12 +49,13 @@ private slots:
     void set_rule(std::vector<bool> rule);
     void on_SyncButton_clicked(bool checked);
     void on_startstopButton_clicked(bool checked);
-
     void on_pushButton_clicked();
-
     void on_TruchetButton_clicked(bool checked);
-
     void on_ColorTruchetButton_clicked(bool checked);
+    void on_FillTruchetButton_clicked(bool checked);
+    void on_SavePic_clicked();
+    void specialRenderFinished(const QImage& image);
+    void specialRenderStart(double centerX, double centerY, double scale, QSize size);
 
 private:
     Ui::MainWindow *ui;
@@ -64,6 +66,7 @@ private:
     void start_action();
 
     Settings settings;
+    PhotoSaver photoSaver;
 
     RenderThread thread_r;
     ActionThread thread_a;

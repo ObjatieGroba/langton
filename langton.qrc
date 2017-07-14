@@ -9,5 +9,12 @@
         <file>images/tr.png</file>
         <file>images/tr2.png</file>
         <file>images/ant2.png</file>
+        <file>images/black&amp;white.png</file>
+        <file>images/colored.png</file>
+        <file>images/fill.png</file>
+        <file>images/nofill.png</file>
+        <file>images/antF.png</file>
+        <file>images/antT.png</file>
+        <file>images/photo.png</file>
     </qresource>
 </RCC>

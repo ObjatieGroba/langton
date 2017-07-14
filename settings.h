@@ -25,6 +25,7 @@ private slots:
 
 signals:
     void new_rule(std::vector<bool> rule);
+    void canceled();
 
 private:
     Ui::settings *ui;

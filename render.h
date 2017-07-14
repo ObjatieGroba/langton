@@ -22,14 +22,18 @@ public:
 
     void set_net(bool checked);
     void set_trTile(bool checked);
-    void set_colortrTile(bool checked);
-    void render(double centerX, double centerY, double scaleFactor, QSize resultSize, bool need_restart = true);
+    void set_colorTrTile(bool checked);
+    void set_fillTrTile(bool checked);
+    void stop();
+    void clear_image();
+    void render(double centerX, double centerY, double scaleFactor, QSize resultSize, bool need_restart = true, bool special = false);
     void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways,
                   unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
                   bool * sync, size_t * did_steps, size_t * need_steps);
 
 signals:
     void renderedImage(const QImage &image, double scaleFactor);
+    void specialRender(const QImage &image);
 
 protected:
     void run() override;
@@ -41,13 +45,16 @@ private:
     bool need_net;
     bool trTile;
     bool colorTrTile;
+    bool fillTrTile;
+    bool otherEmit;
+    bool restart;
+    bool abort;
+    bool need_stop;
     QWaitCondition condition;
     double centerX;
     double centerY;
     double scaleFactor;
     QSize resultSize;
-    bool restart;
-    bool abort;
     std::vector<unsigned int> colors;
     std::vector<std::vector<char>>* data;
     std::vector<bool>* ways;
@@ -62,6 +69,8 @@ private:
     unsigned int mem_AntY;
     bool* sync;
     QImage AntImage;
+    QImage AntImageT;
+    QImage AntImageF;
 };
 
 #endif // RENDER_H

@@ -21,11 +21,13 @@ void Settings::on_settings_finished(int result)
     if (result == 1) {
         if (normal) {
             emit(new_rule(rule));
+            return;
         } else {
             this->show();
             return;
         }
     }
+    emit(canceled());
 }
 
 void Settings::on_lineEdit_textChanged(const QString &s)

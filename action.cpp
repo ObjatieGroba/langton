@@ -18,6 +18,34 @@ ActionThread::~ActionThread() {
     wait();
 }
 
+std::pair<std::pair<unsigned int, unsigned int>, std::pair<double, double>> ActionThread::get_used_size() {
+    bool first = true;
+    mutex_a.lock();
+    unsigned int  minw = *AntX, maxw = *AntX, minh = *AntY, maxh = *AntY;
+    for (unsigned int i = 0; i != static_cast<unsigned int>(data->size()); ++i) {
+        for (unsigned int j = 0; j != static_cast<unsigned int>(data->size()); ++j) {
+            if (first) {
+                if ((*data)[i][j] != 0) {
+                    first = false;
+                    minh = maxh = i;
+                    minw = maxw = j;
+                }
+            } else {
+                if ((*data)[i][j] != 0) {
+                    first = false;
+                    maxh = i;
+                    maxw = std::max(maxw, j);
+                    minw = std::min(minw, j);
+                }
+            }
+        }
+    }
+    mutex_a.unlock();
+    return std::make_pair(std::make_pair(maxh - minh + 3, maxw - minw + 3),
+                          std::make_pair(static_cast<double>(maxh + minh + 1) / 2,
+                                         static_cast<double>(maxw + minw + 1) / 2));
+}
+
 void ActionThread::clear() {
     mutex_a.lock();
     for (size_t i = 0; i != data->size(); ++i) {
@@ -76,7 +104,9 @@ void ActionThread::run() {
         if (abort)
             return;
         if (*AntX == 0 || *AntY == 0 || *AntX == static_cast<unsigned int>(data->size() - 1) || *AntY == static_cast<unsigned int>(data->size()) - 1) {
-            need_stop = true;
+            if (*need_steps >= *did_steps) {
+                need_stop = true;
+            }
         }
         //qDebug((std::to_string(*need_steps) + " " + std::to_string(*did_steps)).c_str());
         mutex_a.lock();
@@ -158,7 +188,7 @@ void ActionThread::run() {
 
 void ActionThread::change_point(long x, long y, char num, bool minus) {
     mutex_a.lock();
-    if (x >= 0 && x < data->size() && y >= 0 && y < data->size()) {
+    if (x >= 0 && static_cast<size_t>(x) < data->size() && y >= 0 && static_cast<size_t>(y) < data->size()) {
         if (minus) {
             while ((*data)[x][y] < num) {
                 (*data)[x][y] += *ColorsNum;
