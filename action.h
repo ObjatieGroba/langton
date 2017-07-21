@@ -20,10 +20,17 @@ public:
     void go();
     void clear();
     void change_point(long x, long y, char num, bool minus);
-    void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum, unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay, size_t * did_steps, size_t * need_steps, bool * sync);
+    void set_steps(unsigned int steps);
+    void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,
+                  unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
+                  size_t * did_steps, size_t * need_steps, bool * sync);
+
+    bool save_data(QDataStream& stream);
+    bool load_data(QDataStream& stream);
 
 signals:
     void did();
+    void new_rule(std::vector<bool> rules);
 
 protected:
     void run() override;
@@ -38,6 +45,8 @@ private:
 
     std::vector<std::vector<char>>* data;
     std::vector<bool>* ways;
+
+    unsigned int steps;
 
     unsigned int * ColorsNum;
     unsigned int * AntX;

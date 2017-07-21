@@ -25,7 +25,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>160</y>
+      <y>170</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -45,7 +45,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>190</y>
+      <y>200</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -129,6 +129,9 @@
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start/stop&lt;br/&gt;Press shift and push to go to 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -201,7 +204,7 @@
    <widget class="MyPushButton" name="TruchetButton">
     <property name="geometry">
      <rect>
-      <x>90</x>
+      <x>130</x>
       <y>10</y>
       <width>25</width>
       <height>25</height>
@@ -234,7 +237,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>90</x>
+      <x>130</x>
       <y>40</y>
       <width>25</width>
       <height>25</height>
@@ -267,8 +270,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>70</y>
+      <x>160</x>
+      <y>10</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -297,7 +300,7 @@
    <widget class="MyPushButton" name="SavePic">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>70</x>
       <y>10</y>
       <width>25</width>
       <height>25</height>
@@ -305,10 +308,13 @@
     </property>
     <property name="font">
      <font>
-      <pointsize>10</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
      </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Render and save image&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
      <string/>
@@ -322,6 +328,135 @@
       <width>19</width>
       <height>19</height>
      </size>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="SaveMap">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>70</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save map&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="ArrowTruchetButton">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>40</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Arrow on Thuchet Tiles&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/noarrow.png</normaloff>
+      <normalon>:/images/arrow.png</normalon>:/images/noarrow.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="LoadMap">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>40</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load map&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/load.png</normaloff>:/images/load.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="stepsInput">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>85</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="inputMask">
+     <string/>
+    </property>
+    <property name="text">
+     <string>1</string>
+    </property>
+    <property name="maxLength">
+     <number>32</number>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="clearButtonEnabled">
+     <bool>false</bool>
     </property>
    </widget>
   </widget>

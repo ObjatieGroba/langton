@@ -5,6 +5,8 @@
 #include <vector>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QFileDialog>
+#include <QMessageBox>
 
 const unsigned int DefaultSize = 10000;
 const double DefaultCenterX = DefaultSize / 2;
@@ -29,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     AntY = DefaultAntY;
     did_steps = 0;
     need_steps = 0;
+    steps = 1;
     sync = true;
     painting = false;
     pressing = false;
@@ -44,12 +47,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     statusBar()->addWidget(paintB, 0);
 
     connect(&thread_r, SIGNAL(renderedImage(QImage,double)), this, SLOT(updatePixmap(QImage,double)));
-    thread_r.set_data(&data, &ways, &AntX, &AntY, &AntWay, &sync, &did_steps, &need_steps);
+    thread_r.set_data(&data, &ways, &AntX, &AntY, &AntWay, &steps, &sync, &did_steps, &need_steps);
     connect(&thread_a, SIGNAL(did()), this, SLOT(render_again()));
     thread_a.set_data(&data, &ways, &ColorsNum, &AntX, &AntY, &AntWay, &did_steps, &need_steps, &sync);
 
     ui->ColorTruchetButton->setVisible(false);
     ui->FillTruchetButton->setVisible(false);
+    ui->ArrowTruchetButton->setVisible(false);
 
     setWindowTitle(tr("Langton's ant"));
 #ifndef QT_NO_CURSOR
@@ -108,6 +112,11 @@ void MainWindow::update_rules() {
 
 void MainWindow::render_again() {
     thread_r.render(centerX, centerY, curScale, size(), need_steps == did_steps);
+    if (need_steps == did_steps) {
+        if (ui->startstopButton->isChecked()) {
+            ui->startstopButton->setChecked(false);
+        }
+    }
 }
 
 void MainWindow::set_rule(std::vector<bool> rule) {
@@ -188,7 +197,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             break;
         }
         pause(true);
-        need_steps += 1;
+        need_steps += steps;
         start_action();
         render_again();
         break;
@@ -198,8 +207,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             break;
         }
         pause(true);
-        if (need_steps > 0) {
-            need_steps -= 1;
+        if (need_steps >= steps) {
+            need_steps -= steps;
+            start_action();
+        } else if (need_steps > 0) {
+            need_steps = 0;
             start_action();
         }
         render_again();
@@ -385,7 +397,14 @@ void MainWindow::on_SyncButton_clicked(bool checked)
 void MainWindow::on_startstopButton_clicked(bool checked)
 {
     if (checked) {
-        need_steps = static_cast<size_t>(-1);
+        if (QApplication::keyboardModifiers() & Qt::ShiftModifier) {
+            need_steps = 0;
+        } else {
+            need_steps = static_cast<size_t>(-1);
+        }
+        if (!sync) {
+            render_again();
+        }
         start_action();
     } else {
         pause(true);
@@ -404,6 +423,7 @@ void MainWindow::on_TruchetButton_clicked(bool checked)
     thread_r.set_trTile(checked);
     ui->ColorTruchetButton->setVisible(checked);
     ui->FillTruchetButton->setVisible(checked);
+    ui->ArrowTruchetButton->setVisible(checked);
 }
 
 void MainWindow::on_ColorTruchetButton_clicked(bool checked)
@@ -417,6 +437,12 @@ void MainWindow::on_FillTruchetButton_clicked(bool checked)
     this->setFocus();
 }
 
+void MainWindow::on_ArrowTruchetButton_clicked(bool checked)
+{
+    thread_r.set_arrowTrTile(checked);
+    this->setFocus();
+}
+
 void MainWindow::on_SavePic_clicked()
 {
     pause(true);
@@ -425,4 +451,82 @@ void MainWindow::on_SavePic_clicked()
     std::pair<std::pair<unsigned int, unsigned int>, std::pair<double, double>> p = thread_a.get_used_size();
     photoSaver.set_used_size(p.first.first, p.first.second, p.second.first, p.second.second);
     photoSaver.show();
+}
+
+void MainWindow::on_stepsInput_textChanged(const QString &s)
+{
+    if (s.size() == 0) {
+        ui->stepsInput->setStyleSheet("background: rgb(255, 200, 200)");
+        return;
+    }
+    for (auto c : s) {
+        if (c > '9' || c < '0') {
+            ui->stepsInput->setStyleSheet("background: rgb(255, 200, 200)");
+            return;
+        }
+    }
+    ui->stepsInput->setStyleSheet("");
+}
+
+void MainWindow::on_stepsInput_editingFinished()
+{
+    QString s = ui->stepsInput->text();
+    if (s.size() == 0) {
+        return;
+    }
+    for (auto c : s) {
+        if (c > '9' || c < '0') {
+            return;
+        }
+    }
+    steps = ui->stepsInput->text().toInt();
+    thread_a.set_steps(steps);
+}
+
+void MainWindow::on_LoadMap_clicked()
+{
+    pause(true);
+    this->setEnabled(false);
+    QString fileName = QFileDialog::getOpenFileName(this,
+            tr("Open data"), "",
+            tr("DataFile (*.df);;All Files (*)"));
+    if (!fileName.isEmpty()) {
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+            return;
+        }
+        QDataStream in(&file);
+        if (!thread_a.load_data(in)) {
+            QMessageBox::information(this, tr("Load data error"), tr("Data is not valid"));
+        }
+        ColorsNum = static_cast<unsigned int>(ways.size());
+        update_rules();
+        render_again();
+    }
+    this->setEnabled(true);
+    render_again();
+}
+
+void MainWindow::on_SaveMap_clicked()
+{
+    pause(true);
+    this->setEnabled(false);
+    QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Open data"), "",
+            tr("DataFile (*.df);;All Files (*)"));
+    if (!fileName.isEmpty()) {
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"),
+                file.errorString());
+            return;
+        }
+        QDataStream out(&file);
+        if (!thread_a.save_data(out)) {
+            QMessageBox::information(this, tr("Save data error"), tr("Smth went wrong"));
+        }
+    }
+    this->setEnabled(true);
+    render_again();
 }

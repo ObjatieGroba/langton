@@ -26,8 +26,6 @@ private slots:
     void on_horizontalSlider_valueChanged(int value);
     void on_RenderButton_clicked();
 
-    void on_filename_textChanged(const QString &arg1);
-
 signals:
     void finished();
     void specialRender(double centerX, double centerY, double scale, QSize size);

@@ -8,6 +8,7 @@
 ActionThread::ActionThread(QObject *parent) : QThread(parent) {
     abort = false;
     need_stop = false;
+    steps = 1;
 }
 
 ActionThread::~ActionThread() {
@@ -19,24 +20,14 @@ ActionThread::~ActionThread() {
 }
 
 std::pair<std::pair<unsigned int, unsigned int>, std::pair<double, double>> ActionThread::get_used_size() {
-    bool first = true;
     mutex_a.lock();
     unsigned int  minw = *AntX, maxw = *AntX, minh = *AntY, maxh = *AntY;
     for (unsigned int i = 0; i != static_cast<unsigned int>(data->size()); ++i) {
         for (unsigned int j = 0; j != static_cast<unsigned int>(data->size()); ++j) {
-            if (first) {
-                if ((*data)[i][j] != 0) {
-                    first = false;
-                    minh = maxh = i;
-                    minw = maxw = j;
-                }
-            } else {
-                if ((*data)[i][j] != 0) {
-                    first = false;
-                    maxh = i;
-                    maxw = std::max(maxw, j);
-                    minw = std::min(minw, j);
-                }
+            if ((*data)[i][j] != 0) {
+                maxh = i;
+                maxw = std::max(maxw, j);
+                minw = std::min(minw, j);
             }
         }
     }
@@ -85,7 +76,9 @@ void ActionThread::stop(bool end) {
     }
 }
 
-void ActionThread::set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum, unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay, size_t * did_steps, size_t * need_steps, bool * sync) {
+void ActionThread::set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,
+                            unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
+                            size_t * did_steps, size_t * need_steps, bool * sync) {
     mutex_a.lock();
     this->data = data;
     this->ways = ways;
@@ -99,10 +92,122 @@ void ActionThread::set_data(std::vector<std::vector<char>>* data, std::vector<bo
     mutex_a.unlock();
 }
 
+void ActionThread::set_steps(unsigned int steps) {
+    mutex_a.lock();
+    if (steps > 10000) {
+        this->steps = 10000;
+    } else {
+        this->steps = steps;
+    }
+    mutex_a.unlock();
+}
+
+bool ActionThread::load_data(QDataStream &stream) {
+    try {
+        mutex_a.lock();
+        QString check;
+        quint32 AntX, AntY, AntWay, waysSize;
+        quint64 did_steps, need_steps;
+        stream >> check;
+        if (check != QString("LangtonAntDataFile v1.0")) {
+            mutex_a.unlock();
+            return false;
+        }
+        stream >> waysSize;
+        std::vector<bool> tmp_ways(waysSize);
+        for (quint32 i = 0; i != waysSize; ++i) {
+            bool tmp;
+            stream >> tmp;
+            tmp_ways[i] = tmp;
+        }
+        stream >> AntX >> AntY >> AntWay >> did_steps >> need_steps;
+        quint64 dataSize;
+        stream >> dataSize;
+        quint32 minw, maxw, minh, maxh;
+        stream >> minw >> maxw >> minh >> maxh;
+        if (minw >= maxw || minh >= maxh) {
+            mutex_a.unlock();
+            return false;
+        }
+        if (data->size() != dataSize) {
+            data->clear();
+            *data = std::vector<std::vector<char>> (static_cast<size_t>(dataSize),
+                                                   std::vector<char> (static_cast<size_t>(dataSize), 0));
+        }
+        for (quint32 i = minw; i != maxw; ++i) {
+            for (quint32 j = minh; j != maxh; ++j) {
+                quint8 tmp;
+                stream >> tmp;
+                (*data)[i][j] = tmp;
+            }
+        }
+        *(this->ways) = tmp_ways;
+        *(this->AntX) = AntX;
+        *(this->AntY) = AntY;
+        *(this->AntWay) = AntWay;
+        *(this->did_steps) = did_steps;
+        *(this->need_steps) = need_steps;
+        mutex_a.unlock();
+    } catch (...) {
+        mutex_a.unlock();
+        clear();
+        return false;
+    }
+    return true;
+}
+
+bool ActionThread::save_data(QDataStream &stream) {
+    try {
+        mutex_a.lock();
+        stream << QString("LangtonAntDataFile v1.0");
+        stream << (quint32)(static_cast<unsigned int>(ways->size()));
+        for (auto elem : *ways) {
+            stream << elem;
+        }
+        stream << (quint32)(*AntX);
+        stream << (quint32)(*AntY);
+        stream << (quint32)(*AntWay);
+        stream << (quint64)(*did_steps);
+        stream << (quint64)(*need_steps);
+        stream << (quint64)(data->size());
+        bool first = true;
+        unsigned int  minw = 0, maxw = 0, minh = 0, maxh = 0;
+        for (unsigned int i = 0; i != static_cast<unsigned int>(data->size()); ++i) {
+            for (unsigned int j = 0; j != static_cast<unsigned int>(data->size()); ++j) {
+                if ((*data)[i][j] != 0) {
+                    if (first) {
+                        minw = maxw = i;
+                        minh = maxh = j;
+                        first = false;
+                    } else {
+                        maxw = i;
+                        maxh = std::max(maxh, j);
+                        minh = std::min(minh, j);
+                    }
+                }
+            }
+        }
+        ++maxw;
+        ++maxh;
+        stream << (quint32)minw;
+        stream << (quint32)maxw;
+        stream << (quint32)minh;
+        stream << (quint32)maxh;
+        for (unsigned int i = minw; i != maxw; ++i) {
+            for (unsigned int j = minh; j != maxh; ++j) {
+                stream << (quint8)((*data)[i][j]);
+            }
+        }
+        mutex_a.unlock();
+    } catch (...) {
+        mutex_a.unlock();
+        return false;
+    }
+    return true;
+}
+
 void ActionThread::run() {
     forever {
-        if (abort)
-            return;
         if (*AntX == 0 || *AntY == 0 || *AntX == static_cast<unsigned int>(data->size() - 1) || *AntY == static_cast<unsigned int>(data->size()) - 1) {
             if (*need_steps >= *did_steps) {
                 need_stop = true;
@@ -110,6 +215,70 @@ void ActionThread::run() {
         }
         //qDebug((std::to_string(*need_steps) + " " + std::to_string(*did_steps)).c_str());
         mutex_a.lock();
+        for (unsigned int i = 0; i != steps; ++i) {
+            if (need_stop) {
+                break;
+            }
+            //qDebug("ok");
+            if (*need_steps > *did_steps) {
+                //qDebug("didaaa");
+                ++(*did_steps);
+                if ((*ways)[(*data)[*AntX][*AntY]]) {
+                    *AntWay += 1;
+                    *AntWay %= 4;
+                } else {
+                    if (*AntWay == 0) {
+                        *AntWay = 3;
+                    } else {
+                        *AntWay -= 1;
+                    }
+                }
+                ++(*data)[*AntX][*AntY];
+                (*data)[*AntX][*AntY] %= *ColorsNum;
+                if (*AntWay == 0) {
+                    *AntY -= 1;
+                } else if (*AntWay == 1) {
+                    *AntX += 1;
+                } else if (*AntWay == 2) {
+                    *AntY += 1;
+                } else if (*AntWay == 3) {
+                    *AntX -= 1;
+                }
+            } else if (*need_steps < *did_steps) {
+                //qDebug("dideeee");
+                --(*did_steps);
+                if (*AntWay == 0) {
+                    *AntY += 1;
+                } else if (*AntWay == 1) {
+                    *AntX -= 1;
+                } else if (*AntWay == 2) {
+                    *AntY -= 1;
+                } else if (*AntWay == 3) {
+                    *AntX += 1;
+                }
+                if ((*data)[*AntX][*AntY] == 0) {
+                    (*data)[*AntX][*AntY] = static_cast<char>(*ColorsNum - 1);
+                } else {
+                    --(*data)[*AntX][*AntY];
+                }
+                if (!(*ways)[(*data)[*AntX][*AntY]]) {
+                    *AntWay += 1;
+                    *AntWay %= 4;
+                } else {
+                    if (*AntWay == 0) {
+                        *AntWay = 3;
+                    } else {
+                        *AntWay -= 1;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (abort)
+            return;
+
         if (need_stop) {
             need_stop = false;
             //qDebug("wait");
@@ -118,61 +287,10 @@ void ActionThread::run() {
             mutex_a.unlock();
             continue;
         }
-        //qDebug("ok");
-        if (*need_steps > *did_steps) {
-            //qDebug("didaaa");
-            ++(*did_steps);
-            if ((*ways)[(*data)[*AntX][*AntY]]) {
-                *AntWay += 1;
-                *AntWay %= 4;
-            } else {
-                if (*AntWay == 0) {
-                    *AntWay = 3;
-                } else {
-                    *AntWay -= 1;
-                }
-            }
-            ++(*data)[*AntX][*AntY];
-            (*data)[*AntX][*AntY] %= *ColorsNum;
-            if (*AntWay == 0) {
-                *AntY -= 1;
-            } else if (*AntWay == 1) {
-                *AntX += 1;
-            } else if (*AntWay == 2) {
-                *AntY += 1;
-            } else if (*AntWay == 3) {
-                *AntX -= 1;
-            }
-        } else if (*need_steps < *did_steps) {
-            //qDebug("dideeee");
-            --(*did_steps);
-            if (*AntWay == 0) {
-                *AntY += 1;
-            } else if (*AntWay == 1) {
-                *AntX -= 1;
-            } else if (*AntWay == 2) {
-                *AntY -= 1;
-            } else if (*AntWay == 3) {
-                *AntX += 1;
-            }
-            if ((*data)[*AntX][*AntY] == 0) {
-                (*data)[*AntX][*AntY] = static_cast<char>(*ColorsNum - 1);
-            } else {
-                --(*data)[*AntX][*AntY];
-            }
-            if (!(*ways)[(*data)[*AntX][*AntY]]) {
-                *AntWay += 1;
-                *AntWay %= 4;
-            } else {
-                if (*AntWay == 0) {
-                    *AntWay = 3;
-                } else {
-                    *AntWay -= 1;
-                }
-            }
-        }
+
         if (abort)
             return;
+
         //qDebug("didd");
         if (*sync) {
             emit did();

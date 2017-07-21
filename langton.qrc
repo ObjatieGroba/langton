@@ -16,5 +16,9 @@
         <file>images/antF.png</file>
         <file>images/antT.png</file>
         <file>images/photo.png</file>
+        <file>images/arrow.png</file>
+        <file>images/noarrow.png</file>
+        <file>images/load.png</file>
+        <file>images/save.png</file>
     </qresource>
 </RCC>

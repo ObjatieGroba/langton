@@ -42,11 +42,14 @@ private slots:
     void zoom(double zoomFactor);
     void paintSetClicked();
     void set_active();
+    void specialRenderFinished(const QImage& image);
+    void specialRenderStart(double centerX, double centerY, double scale, QSize size);
+    void set_rule(std::vector<bool> rule);
+
     void on_MapIn_clicked();
     void on_MapOut_clicked();
     void on_netButton_clicked(bool checked);
     void on_settingsButton_clicked();
-    void set_rule(std::vector<bool> rule);
     void on_SyncButton_clicked(bool checked);
     void on_startstopButton_clicked(bool checked);
     void on_pushButton_clicked();
@@ -54,8 +57,11 @@ private slots:
     void on_ColorTruchetButton_clicked(bool checked);
     void on_FillTruchetButton_clicked(bool checked);
     void on_SavePic_clicked();
-    void specialRenderFinished(const QImage& image);
-    void specialRenderStart(double centerX, double centerY, double scale, QSize size);
+    void on_stepsInput_textChanged(const QString &arg1);
+    void on_stepsInput_editingFinished();
+    void on_ArrowTruchetButton_clicked(bool checked);
+    void on_LoadMap_clicked();
+    void on_SaveMap_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -91,6 +97,7 @@ private:
     unsigned int AntX;
     unsigned int AntY;
     unsigned int AntWay;
+    unsigned int steps;
 
     size_t did_steps;
     size_t need_steps;

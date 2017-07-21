@@ -2,6 +2,8 @@
 #include "ui_photosaver.h"
 #include <QPalette>
 #include <memory>
+#include <QFileDialog>
+#include <QMessageBox>
 
 PhotoSaver::PhotoSaver(QWidget *parent) :
     QDialog(parent),
@@ -50,7 +52,19 @@ void PhotoSaver::on_PhotoSaver_finished(int result)
         return;
     }
     if (result == 1) {
-        image.save((filename + ".png").c_str());
+        QString fileName = QFileDialog::getSaveFileName(this,
+                tr("Open data"), "",
+                tr("png (*.png);;All Files (*)"));
+        if (!fileName.isEmpty()) {
+            try {
+                image.save(fileName);
+            } catch (...) {
+                QMessageBox::information(this, tr("Save data error"), tr("Smth went wrong"));
+            }
+        } else {
+            this->show();
+            return;
+        }
     }
     emit finished();
 }
@@ -67,25 +81,4 @@ void PhotoSaver::on_RenderButton_clicked()
     QSize size(mapWidth * cellSize, mapHeight * cellSize);
     double scale = 1.0f / cellSize;
     emit specialRender(CenterX, CenterY, scale, size);
-}
-
-void PhotoSaver::on_filename_textChanged(const QString &s)
-{
-    if (s.size() == 0 || s.size() > 64) {
-        ui->filename->setStyleSheet("background: rgb(255, 200, 200)");
-        correctFilename = false;
-        return;
-    }
-    for (auto c : s) {
-        if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_' || c == '.' || c == '(' || c == ')' ||
-            c >= '0' && c <= '9') {
-            continue;
-        }
-        ui->filename->setStyleSheet("background: rgb(255, 200, 200)");
-        correctFilename = false;
-        return;
-    }
-    ui->filename->setStyleSheet("background: rgb(255, 255, 255)");
-    correctFilename = true;
-    filename = s.toLocal8Bit();
 }

@@ -20,7 +20,6 @@ public:
 private slots:
     void on_settings_finished(int result);
     void on_lineEdit_textChanged(const QString &s);
-
     void on_RandomButton_clicked();
 
 signals:
