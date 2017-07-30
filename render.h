@@ -30,7 +30,7 @@ public:
     void render(double centerX, double centerY, double scaleFactor, QSize resultSize, bool need_restart = true, bool special = false);
     void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways,
                   unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay, unsigned int * steps,
-                  bool * sync, size_t * did_steps, size_t * need_steps);
+                  bool * sync, long long * did_steps, long long * need_steps);
 
 signals:
     void renderedImage(const QImage &image, double scaleFactor);
@@ -72,8 +72,8 @@ private:
     unsigned int* AntWay;
     unsigned int* steps;
 
-    size_t * did_steps;
-    size_t * need_steps;
+    long long * did_steps;
+    long long * need_steps;
 
     int mem_iX;
     int mem_iY;

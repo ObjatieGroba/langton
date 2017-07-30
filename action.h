@@ -23,7 +23,7 @@ public:
     void set_steps(unsigned int steps);
     void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,
                   unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
-                  size_t * did_steps, size_t * need_steps, bool * sync);
+                  long long * did_steps, long long * need_steps, bool * sync);
 
     bool save_data(QDataStream& stream);
     bool load_data(QDataStream& stream);
@@ -53,8 +53,8 @@ private:
     unsigned int * AntY;
     unsigned int * AntWay;
 
-    size_t * did_steps;
-    size_t * need_steps;
+    long long * did_steps;
+    long long * need_steps;
 };
 
 #endif // ACTION_H

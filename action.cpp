@@ -78,7 +78,7 @@ void ActionThread::stop(bool end) {
 
 void ActionThread::set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,
                             unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
-                            size_t * did_steps, size_t * need_steps, bool * sync) {
+                            long long * did_steps, long long * need_steps, bool * sync) {
     mutex_a.lock();
     this->data = data;
     this->ways = ways;
@@ -107,7 +107,7 @@ bool ActionThread::load_data(QDataStream &stream) {
         mutex_a.lock();
         QString check;
         quint32 AntX, AntY, AntWay, waysSize;
-        quint64 did_steps, need_steps;
+        qint64 did_steps, need_steps;
         stream >> check;
         if (check != QString("LangtonAntDataFile v1.0")) {
             mutex_a.unlock();
@@ -167,8 +167,8 @@ bool ActionThread::save_data(QDataStream &stream) {
         stream << (quint32)(*AntX);
         stream << (quint32)(*AntY);
         stream << (quint32)(*AntWay);
-        stream << (quint64)(*did_steps);
-        stream << (quint64)(*need_steps);
+        stream << (qint64)(*did_steps);
+        stream << (qint64)(*need_steps);
         stream << (quint64)(data->size());
         bool first = true;
         unsigned int  minw = 0, maxw = 0, minh = 0, maxh = 0;

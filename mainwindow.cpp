@@ -7,6 +7,7 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <limits>
 
 const unsigned int DefaultSize = 10000;
 const double DefaultCenterX = DefaultSize / 2;
@@ -207,13 +208,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             break;
         }
         pause(true);
-        if (need_steps >= steps) {
-            need_steps -= steps;
-            start_action();
-        } else if (need_steps > 0) {
-            need_steps = 0;
-            start_action();
-        }
+        need_steps -= steps;
+        start_action();
         render_again();
         break;
     case Qt::Key_Space:
@@ -398,9 +394,17 @@ void MainWindow::on_startstopButton_clicked(bool checked)
 {
     if (checked) {
         if (QApplication::keyboardModifiers() & Qt::ShiftModifier) {
-            need_steps = 0;
+            if (need_steps > 0) {
+                need_steps = 0;
+            } else {
+                need_steps = LLONG_MIN;
+            }
         } else {
-            need_steps = static_cast<size_t>(-1);
+            if (need_steps >= 0) {
+                need_steps = LLONG_MAX;
+            } else {
+                need_steps = 0;
+            }
         }
         if (!sync) {
             render_again();

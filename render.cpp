@@ -3,7 +3,7 @@
 #include <QtWidgets>
 #include <cmath>
 #include <vector>
-#include <limits.h>
+#include <limits>
 
 const double arrowmark = std::sqrt(2) * 0.25f;
 const double deltamark = 0.075f;
@@ -88,7 +88,7 @@ void RenderThread::set_arrowTrTile(bool checked) {
 
 void RenderThread::set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways,
                             unsigned int* AntX, unsigned int* AntY, unsigned int* AntWay, unsigned int * steps,
-                            bool* sync, size_t * did_steps, size_t * need_steps) {
+                            bool* sync, long long * did_steps, long long * need_steps) {
     if (!isRunning()) {
         mutex_r.lock();
         this->data = data;

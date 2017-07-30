@@ -99,8 +99,8 @@ private:
     unsigned int AntWay;
     unsigned int steps;
 
-    size_t did_steps;
-    size_t need_steps;
+    long long did_steps;
+    long long need_steps;
 
     std::vector<std::vector<char>> data;
     std::vector<bool> ways;
