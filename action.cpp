@@ -78,7 +78,7 @@ void ActionThread::stop(bool end) {
 
 void ActionThread::set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,
                             unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
-                            long long * did_steps, long long * need_steps, bool * sync) {
+                            long long * did_steps, long long * need_steps, bool * sync, Analyzer * analyzer) {
     mutex_a.lock();
     this->data = data;
     this->ways = ways;
@@ -89,6 +89,7 @@ void ActionThread::set_data(std::vector<std::vector<char>>* data, std::vector<bo
     this->need_steps = need_steps;
     this->did_steps = did_steps;
     this->sync = sync;
+    this->analyzer = analyzer;
     mutex_a.unlock();
 }
 
@@ -211,6 +212,7 @@ void ActionThread::run() {
         if (*AntX == 0 || *AntY == 0 || *AntX == static_cast<unsigned int>(data->size() - 1) || *AntY == static_cast<unsigned int>(data->size()) - 1) {
             if (*need_steps >= *did_steps) {
                 need_stop = true;
+                *need_steps = *did_steps;
             }
         }
         //qDebug((std::to_string(*need_steps) + " " + std::to_string(*did_steps)).c_str());
@@ -221,6 +223,9 @@ void ActionThread::run() {
             }
             //qDebug("ok");
             if (*need_steps > *did_steps) {
+                if (analyzer->isEnabled()) {
+                    (*analyzer).add(*AntX, *AntY, *AntWay, (*data)[*AntX][*AntY]);
+                }
                 //qDebug("didaaa");
                 ++(*did_steps);
                 if ((*ways)[(*data)[*AntX][*AntY]]) {
@@ -246,6 +251,9 @@ void ActionThread::run() {
                 }
             } else if (*need_steps < *did_steps) {
                 //qDebug("dideeee");
+                if (analyzer->isEnabled()) {
+                    (*analyzer).pop();
+                }
                 --(*did_steps);
                 if (*AntWay == 0) {
                     *AntY += 1;
@@ -278,6 +286,10 @@ void ActionThread::run() {
 
         if (abort)
             return;
+
+        if (analyzer->isAutoAnalyzerEnabled() && *need_steps == *did_steps) {
+            emit show_and_restart();
+        }
 
         if (need_stop) {
             need_stop = false;

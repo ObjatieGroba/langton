@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QImage>
 #include <QWaitCondition>
+#include "analyzer.h"
 #include <vector>
 
 class ActionThread : public QThread
@@ -23,7 +24,7 @@ public:
     void set_steps(unsigned int steps);
     void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,
                   unsigned int * AntX, unsigned int * AntY, unsigned int * AntWay,
-                  long long * did_steps, long long * need_steps, bool * sync);
+                  long long * did_steps, long long * need_steps, bool * sync, Analyzer * analyzer);
 
     bool save_data(QDataStream& stream);
     bool load_data(QDataStream& stream);
@@ -31,6 +32,7 @@ public:
 signals:
     void did();
     void new_rule(std::vector<bool> rules);
+    void show_and_restart();
 
 protected:
     void run() override;
@@ -40,8 +42,8 @@ private:
     QWaitCondition condition;
 
     bool abort;
-    bool * sync;
     bool need_stop;
+    bool * sync;
 
     std::vector<std::vector<char>>* data;
     std::vector<bool>* ways;
@@ -55,6 +57,8 @@ private:
 
     long long * did_steps;
     long long * need_steps;
+
+    Analyzer * analyzer;
 };
 
 #endif // ACTION_H

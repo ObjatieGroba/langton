@@ -1,4 +1,5 @@
 #include <QPainter>
+#include <QThread>
 #include <QKeyEvent>
 #include <math.h>
 #include <string>
@@ -6,8 +7,15 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
+#include <QTextStream>
 #include <QMessageBox>
 #include <limits>
+
+class Sleeper : public QThread
+{
+public:
+    static void msleep(unsigned long msecs){QThread::msleep(msecs);}
+};
 
 const unsigned int DefaultSize = 10000;
 const double DefaultCenterX = DefaultSize / 2;
@@ -16,7 +24,7 @@ const double DefaultScale = 0.125f;
 const unsigned int DefaultColorsNum = 2;
 const unsigned int DefaultAntX = DefaultSize / 2, DefaultAntY = DefaultSize / 2;
 const unsigned int DefaultAntWay = 0;
-
+const unsigned long long check_sum = 1000000;
 const double ZoomInFactor = 0.9f;
 const double ZoomOutFactor = 1 / ZoomInFactor;
 const int ScrollStep = 20;
@@ -36,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     sync = true;
     painting = false;
     pressing = false;
+    special = false;
     ColorsNum = DefaultColorsNum;
     data = std::vector<std::vector<char>> (DefaultSize, std::vector<char> (DefaultSize, 0));
     ways = std::vector<bool> (ColorsNum, false);
@@ -50,11 +59,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(&thread_r, SIGNAL(renderedImage(QImage,double)), this, SLOT(updatePixmap(QImage,double)));
     thread_r.set_data(&data, &ways, &AntX, &AntY, &AntWay, &steps, &sync, &did_steps, &need_steps);
     connect(&thread_a, SIGNAL(did()), this, SLOT(render_again()));
-    thread_a.set_data(&data, &ways, &ColorsNum, &AntX, &AntY, &AntWay, &did_steps, &need_steps, &sync);
+    thread_a.set_data(&data, &ways, &ColorsNum, &AntX, &AntY, &AntWay, &did_steps, &need_steps, &sync, &analyzer);
+
+    connect(&thread_a, SIGNAL(show_and_restart()), this, SLOT(show_and_restart()));
 
     ui->ColorTruchetButton->setVisible(false);
     ui->FillTruchetButton->setVisible(false);
     ui->ArrowTruchetButton->setVisible(false);
+    ui->Analyze->setVisible(false);
+    ui->Auto->setVisible(false);
+    ui->Notification->setVisible(false);
 
     setWindowTitle(tr("Langton's ant"));
 #ifndef QT_NO_CURSOR
@@ -124,6 +138,7 @@ void MainWindow::set_rule(std::vector<bool> rule) {
     ColorsNum = static_cast<unsigned int>(rule.size());
     //on_SyncButton_clicked(true);
     //ui->SyncButton->setChecked(true);
+    analyzer.clear();
     thread_a.clear();
     curScale = DefaultScale;
     centerY = centerX = static_cast<unsigned int>(data.size()) / 2;
@@ -306,6 +321,60 @@ void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
     pixmapScale = scaleFactor;
     this->setFocus();
     update();
+    if (special) {
+        pause(true);
+        special = false;
+        size_t id = analyzer.analyze();
+        if (id != 0) {
+            std::string rulestr = "";
+            for (size_t i = 0; i != ColorsNum; ++i) {
+                if (ways[i]) {
+                    rulestr += "R";
+                } else {
+                    rulestr += "L";
+                }
+            }
+            std::string msg = "Rule: " + rulestr + "\r\nLen: " + std::to_string(id) + "\r\nStat: " + analyzer.statistic(id, ColorsNum);
+            if (ui->Notification->isChecked()) {
+                QMessageBox::information(this, tr("Info"), msg.c_str());
+            }
+            QString filename = QString::fromStdString(rulestr) + ".jpg";
+            image.save(filename);
+            filename = QString::fromStdString(rulestr) + ".txt";
+            QFile file(filename);
+            if (file.open(QIODevice::ReadWrite)) {
+                QTextStream stream(&file);
+                stream << QString::fromStdString(msg);
+            }
+            file.close();
+        }
+        std::vector<bool> copy = ways;
+        id = -1;
+        for (size_t i = 0; i != ways.size(); ++i) {
+            if (!ways[i]) {
+                id = i;
+            }
+        }
+        if (id == static_cast<size_t>(-1)) {
+            copy.resize(ways.size() + 1);
+            for (size_t i = 1; i != copy.size(); ++i) {
+                copy[i] = false;
+            }
+            copy[0] = true;
+        } else {
+            copy[id] = true;
+            while (++id < copy.size()) {
+                copy[id] = false;
+            }
+        }
+        set_rule(copy);
+        Sleeper::msleep(100);
+        need_steps = check_sum;
+        analyzer.setEnabled(true);
+        analyzer.setAutoAnalyzer(true);
+        start_action();
+        render_again();
+    }
 }
 
 void MainWindow::zoom(double zoomFactor)
@@ -533,4 +602,46 @@ void MainWindow::on_SaveMap_clicked()
     }
     this->setEnabled(true);
     render_again();
+}
+
+void MainWindow::on_OnOffAnalyzer_clicked(bool checked)
+{
+    pause(true);
+    analyzer_enabled = checked;
+    analyzer.setEnabled(checked);
+    ui->Analyze->setVisible(checked);
+    ui->Auto->setVisible(checked);
+    ui->Notification->setVisible(checked);
+    if (checked) {
+        ;
+    } else {
+        analyzer.clear();
+    }
+}
+
+void MainWindow::on_Analyze_clicked()
+{
+    pause(true);
+    size_t id = analyzer.analyze();
+    QMessageBox::information(this, tr("Info"), ("Cur info: " + std::to_string(id) + "\n" + analyzer.statistic(id, ColorsNum)).c_str());
+}
+
+void MainWindow::on_Auto_clicked(bool checked)
+{
+    pause(true);
+    need_steps = check_sum;
+    start_action();
+    render_again();
+    analyzer.setAutoAnalyzer(checked);
+}
+
+void MainWindow::show_and_restart() {
+    pause(true);
+    if (!analyzer.isEnabled()) {
+        return;
+    }
+    analyzer.setEnabled(false);
+    analyzer.setAutoAnalyzer(false);
+    on_pushButton_clicked();
+    special = true;
 }

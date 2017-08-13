@@ -4,9 +4,9 @@ Lagton Ant
 Current build:
 
 X64:
-https://yadi.sk/d/QWVbfSxn3KrQZk
+https://yadi.sk/d/mEz3YSMF3LxNJV
 
 X86:
-https://yadi.sk/d/R14JGNA63Kyoyy
+https://yadi.sk/d/iqOUyHLL3LxNLW
 
 More info on wiki

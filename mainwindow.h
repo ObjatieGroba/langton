@@ -11,6 +11,7 @@
 #include "settings.h"
 #include "photosaver.h"
 #include "mypushbutton.h"
+#include "analyzer.h"
 #include <vector>
 
 namespace Ui {
@@ -46,6 +47,8 @@ private slots:
     void specialRenderStart(double centerX, double centerY, double scale, QSize size);
     void set_rule(std::vector<bool> rule);
 
+    void show_and_restart();
+
     void on_MapIn_clicked();
     void on_MapOut_clicked();
     void on_netButton_clicked(bool checked);
@@ -62,6 +65,9 @@ private slots:
     void on_ArrowTruchetButton_clicked(bool checked);
     void on_LoadMap_clicked();
     void on_SaveMap_clicked();
+    void on_OnOffAnalyzer_clicked(bool checked);
+    void on_Analyze_clicked();
+    void on_Auto_clicked(bool checked);
 
 private:
     Ui::MainWindow *ui;
@@ -87,6 +93,8 @@ private:
     bool painting;
     bool sync;
     bool pressing;
+    bool analyzer_enabled;
+    bool special;
 
     double centerX;
     double centerY;
@@ -104,6 +112,8 @@ private:
 
     std::vector<std::vector<char>> data;
     std::vector<bool> ways;
+
+    Analyzer analyzer;
 };
 
 #endif // MAINWINDOW_H

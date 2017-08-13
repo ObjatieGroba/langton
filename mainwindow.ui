@@ -204,7 +204,7 @@
    <widget class="MyPushButton" name="TruchetButton">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>220</x>
       <y>10</y>
       <width>25</width>
       <height>25</height>
@@ -237,7 +237,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>220</x>
       <y>40</y>
       <width>25</width>
       <height>25</height>
@@ -270,7 +270,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>250</x>
       <y>10</y>
       <width>25</width>
       <height>25</height>
@@ -369,7 +369,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>250</x>
       <y>40</y>
       <width>25</width>
       <height>25</height>
@@ -457,6 +457,137 @@
     </property>
     <property name="clearButtonEnabled">
      <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="OnOffAnalyzer">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>10</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Turn on/off tracking&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>Tr</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="Analyze">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>40</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Analyze current position&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>S</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="Auto">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>10</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Turn on auto-analyzer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>A</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="Notification">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>40</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Notification on/off&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>Not</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>

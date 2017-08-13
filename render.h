@@ -82,8 +82,8 @@ private:
     unsigned int mem_AntY;
 
     bool* sync;
-    QImage AntImage;
 
+    QImage AntImage;
     QImage AntImageT;
     QImage AntImageF;
 };
