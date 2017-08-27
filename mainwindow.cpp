@@ -24,14 +24,15 @@ const double DefaultScale = 0.125f;
 const unsigned int DefaultColorsNum = 2;
 const unsigned int DefaultAntX = DefaultSize / 2, DefaultAntY = DefaultSize / 2;
 const unsigned int DefaultAntWay = 0;
-const unsigned long long check_sum = 1000000;
 const double ZoomInFactor = 0.9f;
 const double ZoomOutFactor = 1 / ZoomInFactor;
 const int ScrollStep = 20;
+const unsigned long long DefaultCheckSum = 1000000;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     centerX = DefaultCenterX;
+    AutoAnalyzerStepsNum = DefaultCheckSum;
     centerY = DefaultCenterY;
     pixmapScale = DefaultScale;
     curScale = DefaultScale;
@@ -68,7 +69,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->ArrowTruchetButton->setVisible(false);
     ui->Analyze->setVisible(false);
     ui->Auto->setVisible(false);
-    ui->Notification->setVisible(false);
 
     setWindowTitle(tr("Langton's ant"));
 #ifndef QT_NO_CURSOR
@@ -81,7 +81,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(&photoSaver, SIGNAL(finished()), this, SLOT(set_active()));
     connect(&photoSaver, SIGNAL(specialRender(double,double,double,QSize)),
             this, SLOT(specialRenderStart(double,double,double,QSize)));
+
     connect(&thread_r, SIGNAL(specialRender(QImage)), this, SLOT(specialRenderFinished(QImage)));
+
+    connect(&dialog, SIGNAL(canceled()), this, SLOT(AutoAnalyzerCanceled()));
+    connect(&dialog, SIGNAL(applied(unsigned long long,unsigned long long,unsigned long long,unsigned long long)),
+            this, SLOT(AutoAnalyzerStart(unsigned long long,unsigned long long,unsigned long long,unsigned long long)));
 
     std::string s;
     for (size_t i = 0; i != ColorsNum; ++i) {
@@ -107,9 +112,6 @@ void MainWindow::start_action() {
 void MainWindow::pause(bool end) {
     thread_r.stop();
     thread_a.stop(end);
-    if (ui->startstopButton->isChecked()) {
-        ui->startstopButton->setChecked(false);
-    }
 }
 
 void MainWindow::update_rules() {
@@ -127,11 +129,6 @@ void MainWindow::update_rules() {
 
 void MainWindow::render_again() {
     thread_r.render(centerX, centerY, curScale, size(), need_steps == did_steps);
-    if (need_steps == did_steps) {
-        if (ui->startstopButton->isChecked()) {
-            ui->startstopButton->setChecked(false);
-        }
-    }
 }
 
 void MainWindow::set_rule(std::vector<bool> rule) {
@@ -190,6 +187,11 @@ void MainWindow::paintEvent(QPaintEvent * /* event */)
 void MainWindow::resizeEvent(QResizeEvent * /* event */)
 {
     thread_r.render(centerX, centerY, curScale, size());
+    uint32_t y = height() - ui->Stop->height() - 5 - ui->statusbar->height(), x = (width() - ui->Stop->width()) / 2;
+    ui->Stop->setGeometry(x, y, 25, 25);
+    ui->GoBack->setGeometry(x - 30, y, 25, 25);
+    ui->GoForward->setGeometry(x + 30, y, 25, 25);
+
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
@@ -208,6 +210,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         scroll(0, -ScrollStep);
         break;
     case Qt::Key_Plus:
+        if (analyzer.isAutoAnalyzerEnabled()) {
+            return;
+        }
         if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
             zoom(ZoomInFactor);
             break;
@@ -218,6 +223,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         render_again();
         break;
     case Qt::Key_Minus:
+        if (analyzer.isAutoAnalyzerEnabled()) {
+            return;
+        }
         if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
             zoom(ZoomOutFactor);
             break;
@@ -228,14 +236,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         render_again();
         break;
     case Qt::Key_Space:
-        if (ui->startstopButton->isChecked()) {
-            ui->startstopButton->setChecked(false);
-            on_startstopButton_clicked(false);
-        } else {
-            ui->startstopButton->setChecked(true);
-            on_startstopButton_clicked(true);
+        if (analyzer.isAutoAnalyzerEnabled()) {
+            return;
         }
-        render_again();
+        pause(true);
         break;
     default:
         QWidget::keyPressEvent(event);
@@ -310,6 +314,30 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
     pressing = false;
 }
 
+void MainWindow::new_next_rule() {
+    AutoAnalyzerTried = 0;
+    std::vector<bool> copy = ways;
+    size_t id = -1;
+    for (size_t i = 0; i != ways.size(); ++i) {
+        if (!ways[i]) {
+            id = i;
+        }
+    }
+    if (id == static_cast<size_t>(-1)) {
+        copy.resize(ways.size() + 1);
+        for (size_t i = 1; i != copy.size(); ++i) {
+            copy[i] = false;
+        }
+        copy[0] = true;
+    } else {
+        copy[id] = true;
+        while (++id < copy.size()) {
+            copy[id] = false;
+        }
+    }
+    set_rule(copy);
+}
+
 void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
     start_action();
     if (!lastDragPos.isNull()) {
@@ -323,7 +351,9 @@ void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
     update();
     if (special) {
         pause(true);
+        ++AutoAnalyzerTried;
         special = false;
+        ui->AutoAnalyzerText->setText(("Try: " + std::to_string(AutoAnalyzerTried) + "/" + std::to_string(AutoAnalyzerNumOfTry)).c_str());
         size_t id = analyzer.analyze();
         if (id != 0) {
             std::string rulestr = "";
@@ -335,41 +365,37 @@ void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
                 }
             }
             std::string msg = "Rule: " + rulestr + "\r\nLen: " + std::to_string(id) + "\r\nStat: " + analyzer.statistic(id, ColorsNum);
-            if (ui->Notification->isChecked()) {
-                QMessageBox::information(this, tr("Info"), msg.c_str());
-            }
+
             QString filename = QString::fromStdString(rulestr) + ".jpg";
             image.save(filename);
-            filename = QString::fromStdString(rulestr) + ".txt";
+
+            filename = QString::fromStdString(rulestr) + ".df";
             QFile file(filename);
-            if (file.open(QIODevice::ReadWrite)) {
-                QTextStream stream(&file);
+            if (!file.open(QIODevice::WriteOnly)) {
+                QMessageBox::information(this, tr("Unable to open file"),
+                    file.errorString());
+                return;
+            }
+            QDataStream out(&file);
+            thread_a.save_data(out);
+            file.close();
+
+            filename = QString::fromStdString(rulestr) + ".txt";
+            QFile file2(filename);
+            if (file2.open(QIODevice::ReadWrite)) {
+                QTextStream stream(&file2);
                 stream << QString::fromStdString(msg);
             }
-            file.close();
-        }
-        std::vector<bool> copy = ways;
-        id = -1;
-        for (size_t i = 0; i != ways.size(); ++i) {
-            if (!ways[i]) {
-                id = i;
-            }
-        }
-        if (id == static_cast<size_t>(-1)) {
-            copy.resize(ways.size() + 1);
-            for (size_t i = 1; i != copy.size(); ++i) {
-                copy[i] = false;
-            }
-            copy[0] = true;
+            file2.close();
+            new_next_rule();
+        } else if (AutoAnalyzerNumOfTry != 0 && AutoAnalyzerTried < AutoAnalyzerNumOfTry) {
+            thread_a.new_rand(AutoAnalyzerRandSize);
+            analyzer.clear();
         } else {
-            copy[id] = true;
-            while (++id < copy.size()) {
-                copy[id] = false;
-            }
+            new_next_rule();
         }
-        set_rule(copy);
         Sleeper::msleep(100);
-        need_steps = check_sum;
+        need_steps = AutoAnalyzerStepsNum;
         analyzer.setEnabled(true);
         analyzer.setAutoAnalyzer(true);
         start_action();
@@ -457,31 +483,6 @@ void MainWindow::on_SyncButton_clicked(bool checked)
         render_again();
     }
     this->setFocus();
-}
-
-void MainWindow::on_startstopButton_clicked(bool checked)
-{
-    if (checked) {
-        if (QApplication::keyboardModifiers() & Qt::ShiftModifier) {
-            if (need_steps > 0) {
-                need_steps = 0;
-            } else {
-                need_steps = LLONG_MIN;
-            }
-        } else {
-            if (need_steps >= 0) {
-                need_steps = LLONG_MAX;
-            } else {
-                need_steps = 0;
-            }
-        }
-        if (!sync) {
-            render_again();
-        }
-        start_action();
-    } else {
-        pause(true);
-    }
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -611,7 +612,6 @@ void MainWindow::on_OnOffAnalyzer_clicked(bool checked)
     analyzer.setEnabled(checked);
     ui->Analyze->setVisible(checked);
     ui->Auto->setVisible(checked);
-    ui->Notification->setVisible(checked);
     if (checked) {
         ;
     } else {
@@ -629,10 +629,14 @@ void MainWindow::on_Analyze_clicked()
 void MainWindow::on_Auto_clicked(bool checked)
 {
     pause(true);
-    need_steps = check_sum;
-    start_action();
-    render_again();
-    analyzer.setAutoAnalyzer(checked);
+    if (checked) {
+        dialog.show();
+        this->setEnabled(false);
+    } else {
+        ui->AutoAnalyzerText->setText("");
+        AutoAnalyzerButtonBlocker(true);
+        analyzer.setAutoAnalyzer(false);
+    }
 }
 
 void MainWindow::show_and_restart() {
@@ -644,4 +648,64 @@ void MainWindow::show_and_restart() {
     analyzer.setAutoAnalyzer(false);
     on_pushButton_clicked();
     special = true;
+}
+
+void MainWindow::on_Stop_clicked()
+{
+    pause(true);
+}
+
+void MainWindow::on_GoBack_clicked()
+{
+    if (need_steps > 0) {
+        need_steps = 0;
+    } else {
+        need_steps = LLONG_MIN;
+    }
+    render_again();
+    start_action();
+}
+
+void MainWindow::on_GoForward_clicked()
+{
+    if (need_steps >= 0) {
+        need_steps = LLONG_MAX;
+    } else {
+        need_steps = 0;
+    }
+    render_again();
+    start_action();
+}
+
+void MainWindow::AutoAnalyzerCanceled() {
+    ui->Auto->setChecked(false);
+    set_active();
+}
+
+void MainWindow::AutoAnalyzerButtonBlocker(bool b) {
+    ui->GoBack->setEnabled(b);
+    ui->GoForward->setEnabled(b);
+    ui->Stop->setEnabled(b);
+    ui->Analyze->setEnabled(b);
+    ui->OnOffAnalyzer->setEnabled(b);
+    ui->SaveMap->setEnabled(b);
+    ui->LoadMap->setEnabled(b);
+    ui->SavePic->setEnabled(b);
+    ui->settingsButton->setEnabled(b);
+    ui->stepsInput->setEnabled(b);
+}
+
+void MainWindow::AutoAnalyzerStart(unsigned long long l, unsigned long long st, unsigned long long s, unsigned long long t) {
+    AutoAnalyzerStepsNum = l;
+    AutoAnalyzerRandSize = s;
+    AutoAnalyzerNumOfTry = t;
+    AutoAnalyzerTried = 0;
+    analyzer.clear();
+    analyzer.setDataLength(st * 2);
+    need_steps = AutoAnalyzerStepsNum;
+    analyzer.setAutoAnalyzer(true);
+    set_active();
+    AutoAnalyzerButtonBlocker(false);
+    start_action();
+    render_again();
 }

@@ -390,7 +390,7 @@ void RenderThread::run() {
         QImage AntImageLocal;
         if (antSize <= 4) {
             AntImageLocal = AntImageF;
-        } else if (antSize <= 32) {
+        } else if (antSize <= 48) {
             AntImageLocal = AntImageT;
         } else {
             AntImageLocal = AntImage;

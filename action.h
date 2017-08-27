@@ -20,6 +20,7 @@ public:
     void stop(bool end=false);
     void go();
     void clear();
+    void new_rand(unsigned long long size);
     void change_point(long x, long y, char num, bool minus);
     void set_steps(unsigned int steps);
     void set_data(std::vector<std::vector<char>>* data, std::vector<bool>* ways, unsigned int * ColorsNum,

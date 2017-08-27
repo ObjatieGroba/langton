@@ -6,8 +6,9 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QLabel>
-#include "render.h"
 #include "action.h"
+#include "dialog.h"
+#include "render.h"
 #include "settings.h"
 #include "photosaver.h"
 #include "mypushbutton.h"
@@ -46,6 +47,8 @@ private slots:
     void specialRenderFinished(const QImage& image);
     void specialRenderStart(double centerX, double centerY, double scale, QSize size);
     void set_rule(std::vector<bool> rule);
+    void AutoAnalyzerCanceled();
+    void AutoAnalyzerStart(unsigned long long l, unsigned long long st, unsigned long long s, unsigned long long t);
 
     void show_and_restart();
 
@@ -54,7 +57,6 @@ private slots:
     void on_netButton_clicked(bool checked);
     void on_settingsButton_clicked();
     void on_SyncButton_clicked(bool checked);
-    void on_startstopButton_clicked(bool checked);
     void on_pushButton_clicked();
     void on_TruchetButton_clicked(bool checked);
     void on_ColorTruchetButton_clicked(bool checked);
@@ -68,6 +70,9 @@ private slots:
     void on_OnOffAnalyzer_clicked(bool checked);
     void on_Analyze_clicked();
     void on_Auto_clicked(bool checked);
+    void on_Stop_clicked();
+    void on_GoBack_clicked();
+    void on_GoForward_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -76,9 +81,12 @@ private:
     void update_rules();
     void pause(bool end=false);
     void start_action();
+    void AutoAnalyzerButtonBlocker(bool b);
+    void new_next_rule();
 
     Settings settings;
     PhotoSaver photoSaver;
+    Dialog dialog;
 
     RenderThread thread_r;
     ActionThread thread_a;
@@ -109,6 +117,11 @@ private:
 
     long long did_steps;
     long long need_steps;
+
+    unsigned long long AutoAnalyzerStepsNum;
+    unsigned long long AutoAnalyzerRandSize;
+    unsigned long long AutoAnalyzerNumOfTry;
+    unsigned long long AutoAnalyzerTried;
 
     std::vector<std::vector<char>> data;
     std::vector<bool> ways;

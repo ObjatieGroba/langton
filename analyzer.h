@@ -14,7 +14,7 @@ private:
         char color;
     };
 
-    static const size_t data_length = 10000;
+    size_t data_length;
     std::vector<Node> data;
     size_t pos;
     size_t size;
@@ -26,7 +26,12 @@ public:
         data = std::vector<Node>();
         enabled = false;
         pos = 0;
+        data_length = 10000;
         size = 0;
+    }
+
+    void setDataLength(size_t l) {
+        data_length = l;
     }
 
     void setEnabled(bool enabled) {
@@ -152,6 +157,19 @@ public:
         for (size_t i = 0; i != stat.size(); ++i) {
             s += std::to_string(stat[i]) + " ";
         }
+        s += "\r\nDelta: ";
+        unsigned int x, y;
+        if ((*this)[0].x < (*this)[end].x) {
+            x = (*this)[end].x - (*this)[0].x;
+        } else {
+            x = (*this)[0].x - (*this)[end].x;
+        }
+        if ((*this)[0].y < (*this)[end].y) {
+            y = (*this)[end].y - (*this)[0].y;
+        } else {
+            y = (*this)[0].y - (*this)[end].y;
+        }
+        s += std::to_string(x) + " " + std::to_string(y);
         return s;
     }
 };

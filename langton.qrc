@@ -20,5 +20,6 @@
         <file>images/noarrow.png</file>
         <file>images/load.png</file>
         <file>images/save.png</file>
+        <file>images/back.png</file>
     </qresource>
 </RCC>

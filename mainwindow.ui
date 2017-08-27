@@ -25,7 +25,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>170</y>
+      <y>230</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -45,7 +45,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>200</y>
+      <y>260</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -64,8 +64,8 @@
    <widget class="MyPushButton" name="netButton">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>70</y>
+      <x>120</x>
+      <y>40</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -94,8 +94,8 @@
    <widget class="MyPushButton" name="settingsButton">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>40</y>
+      <x>70</x>
+      <y>10</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -118,39 +118,6 @@
       <width>19</width>
       <height>19</height>
      </size>
-    </property>
-   </widget>
-   <widget class="MyPushButton" name="startstopButton">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>40</y>
-      <width>25</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start/stop&lt;br/&gt;Press shift and push to go to 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="icon">
-     <iconset resource="langton.qrc">
-      <normaloff>:/images/play.png</normaloff>
-      <normalon>:/images/stop.png</normalon>:/images/play.png</iconset>
-    </property>
-    <property name="iconSize">
-     <size>
-      <width>19</width>
-      <height>19</height>
-     </size>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-    <property name="checked">
-     <bool>false</bool>
     </property>
    </widget>
    <widget class="MyPushButton" name="SyncButton">
@@ -178,8 +145,8 @@
    <widget class="MyPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>70</y>
+      <x>120</x>
+      <y>10</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -204,7 +171,7 @@
    <widget class="MyPushButton" name="TruchetButton">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>150</x>
       <y>10</y>
       <width>25</width>
       <height>25</height>
@@ -237,7 +204,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>150</x>
       <y>40</y>
       <width>25</width>
       <height>25</height>
@@ -270,7 +237,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>180</x>
       <y>10</y>
       <width>25</width>
       <height>25</height>
@@ -300,8 +267,8 @@
    <widget class="MyPushButton" name="SavePic">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>10</y>
+      <x>10</x>
+      <y>40</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -333,8 +300,8 @@
    <widget class="MyPushButton" name="SaveMap">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>70</y>
+      <x>40</x>
+      <y>40</y>
       <width>25</width>
       <height>25</height>
      </rect>
@@ -369,7 +336,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>180</x>
       <y>40</y>
       <width>25</width>
       <height>25</height>
@@ -433,7 +400,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>100</y>
+      <y>70</y>
       <width>85</width>
       <height>25</height>
      </rect>
@@ -462,9 +429,9 @@
    <widget class="MyPushButton" name="OnOffAnalyzer">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>10</y>
-      <width>25</width>
+      <x>10</x>
+      <y>100</y>
+      <width>85</width>
       <height>25</height>
      </rect>
     </property>
@@ -479,7 +446,7 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Turn on/off tracking&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
-     <string>Tr</string>
+     <string>Tracking</string>
     </property>
     <property name="iconSize">
      <size>
@@ -494,9 +461,9 @@
    <widget class="MyPushButton" name="Analyze">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>40</y>
-      <width>25</width>
+      <x>10</x>
+      <y>130</y>
+      <width>85</width>
       <height>25</height>
      </rect>
     </property>
@@ -511,7 +478,7 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Analyze current position&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
-     <string>S</string>
+     <string>Analyze</string>
     </property>
     <property name="iconSize">
      <size>
@@ -526,9 +493,9 @@
    <widget class="MyPushButton" name="Auto">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>10</y>
-      <width>25</width>
+      <x>10</x>
+      <y>160</y>
+      <width>85</width>
       <height>25</height>
      </rect>
     </property>
@@ -543,7 +510,7 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Turn on auto-analyzer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
-     <string>A</string>
+     <string>Auto-analyzer</string>
     </property>
     <property name="iconSize">
      <size>
@@ -555,27 +522,27 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="MyPushButton" name="Notification">
+   <widget class="MyPushButton" name="GoBack">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>40</y>
+      <x>390</x>
+      <y>530</y>
       <width>25</width>
       <height>25</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <pointsize>8</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
-     </font>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
     </property>
-    <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Notification on/off&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <property name="autoFillBackground">
+     <bool>false</bool>
     </property>
     <property name="text">
-     <string>Not</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/back.png</normaloff>:/images/back.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -583,11 +550,76 @@
       <height>19</height>
      </size>
     </property>
-    <property name="checkable">
-     <bool>true</bool>
+   </widget>
+   <widget class="MyPushButton" name="Stop">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>530</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
     </property>
-    <property name="checked">
-     <bool>true</bool>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/stop.png</normaloff>:/images/stop.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="MyPushButton" name="GoForward">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>530</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="langton.qrc">
+      <normaloff>:/images/play.png</normaloff>:/images/play.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>19</width>
+      <height>19</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QLabel" name="AutoAnalyzerText">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>190</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>

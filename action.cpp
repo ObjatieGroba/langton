@@ -4,6 +4,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <random>
+#include <ctime>
 
 ActionThread::ActionThread(QObject *parent) : QThread(parent) {
     abort = false;
@@ -44,6 +46,24 @@ void ActionThread::clear() {
     }
     *AntWay = 0;
     *AntX = *AntY = static_cast<unsigned int>(data->size()) / 2;
+    *need_steps = *did_steps = 0;
+    mutex_a.unlock();
+    emit did();
+}
+
+void ActionThread::new_rand(unsigned long long size) {
+    mutex_a.lock();
+    for (size_t i = 0; i != data->size(); ++i) {
+        std::fill((*data)[i].begin(), (*data)[i].end(), 0);
+    }
+    *AntWay = 0;
+    *AntX = *AntY = static_cast<unsigned int>(data->size()) / 2;
+    srand(time(NULL));
+    for (unsigned int x = *AntX - size; x != *AntX + size; ++x) {
+        for (unsigned int y = *AntY - size; y != *AntY + size; ++y) {
+            (*data)[x][y] = rand() % (*ColorsNum);
+        }
+    }
     *need_steps = *did_steps = 0;
     mutex_a.unlock();
     emit did();
