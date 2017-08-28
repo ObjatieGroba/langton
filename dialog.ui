@@ -84,7 +84,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Рандомная расскрасска в случае отсутсвия highway</string>
+    <string>Рандомная раскраска в случае отсутсвия highway</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEditSteps">

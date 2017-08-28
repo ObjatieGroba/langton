@@ -154,6 +154,10 @@ bool ActionThread::load_data(QDataStream &stream) {
             data->clear();
             *data = std::vector<std::vector<char>> (static_cast<size_t>(dataSize),
                                                    std::vector<char> (static_cast<size_t>(dataSize), 0));
+        } else {
+            for (size_t i = 0; i != data->size(); ++i) {
+                std::fill((*data)[i].begin(), (*data)[i].end(), 0);
+            }
         }
         for (quint32 i = minw; i != maxw; ++i) {
             for (quint32 j = minh; j != maxh; ++j) {
