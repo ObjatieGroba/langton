@@ -12,6 +12,7 @@
 #include "settings.h"
 #include "photosaver.h"
 #include "mypushbutton.h"
+#include "wait_window.h"
 #include "analyzer.h"
 #include <vector>
 
@@ -81,12 +82,13 @@ private:
     void update_rules();
     void pause(bool end=false);
     void start_action();
-    void AutoAnalyzerButtonBlocker(bool b);
+    void AutoAnalyzerButtonBlocker(bool b, bool c = false);
     void new_next_rule();
 
     Settings settings;
     PhotoSaver photoSaver;
     Dialog dialog;
+    Wait_window wait_window;
 
     RenderThread thread_r;
     ActionThread thread_a;
@@ -103,6 +105,7 @@ private:
     bool pressing;
     bool analyzer_enabled;
     bool special;
+    bool need_new;
 
     double centerX;
     double centerY;

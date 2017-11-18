@@ -10,6 +10,17 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <limits>
+#include <io.h>
+
+bool FileExists (const char *fname) {
+    _finddata_t data;
+    long nFind = _findfirst(fname,&data);
+    if (nFind != -1) {
+        _findclose(nFind);
+        return true;
+    }
+    return false;
+}
 
 class Sleeper : public QThread
 {
@@ -210,12 +221,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         scroll(0, -ScrollStep);
         break;
     case Qt::Key_Plus:
-        if (analyzer.isAutoAnalyzerEnabled()) {
-            return;
-        }
         if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
             zoom(ZoomInFactor);
             break;
+        }
+        if (analyzer.isAutoAnalyzerEnabled()) {
+            return;
         }
         pause(true);
         need_steps += steps;
@@ -223,12 +234,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         render_again();
         break;
     case Qt::Key_Minus:
-        if (analyzer.isAutoAnalyzerEnabled()) {
-            return;
-        }
         if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
             zoom(ZoomOutFactor);
             break;
+        }
+        if (analyzer.isAutoAnalyzerEnabled()) {
+            return;
         }
         pause(true);
         need_steps -= steps;
@@ -336,6 +347,7 @@ void MainWindow::new_next_rule() {
         }
     }
     set_rule(copy);
+    on_pushButton_clicked();
 }
 
 void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
@@ -356,6 +368,10 @@ void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
         ui->AutoAnalyzerText->setText(("Try: " + std::to_string(AutoAnalyzerTried) + "/" + std::to_string(AutoAnalyzerNumOfTry)).c_str());
         size_t id = analyzer.analyze();
         if (id != 0) {
+
+            this->setEnabled(false);
+            wait_window.show();
+
             std::string rulestr = "";
             for (size_t i = 0; i != ColorsNum; ++i) {
                 if (ways[i]) {
@@ -364,12 +380,21 @@ void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
                     rulestr += "L";
                 }
             }
+
+            uint8_t add = 255u;
+            for (uint8_t i = 0u; i != 255u; ++i) {
+                if (!FileExists((rulestr + std::to_string(i) + ".df").c_str())) {
+                    add = i;
+                    break;
+                }
+            }
+
             std::string msg = "Rule: " + rulestr + "\r\nLen: " + std::to_string(id) + "\r\nStat: " + analyzer.statistic(id, ColorsNum);
 
-            QString filename = QString::fromStdString(rulestr) + ".jpg";
+            QString filename = QString::fromStdString(rulestr + std::to_string(add)) + ".jpg";
             image.save(filename);
 
-            filename = QString::fromStdString(rulestr) + ".df";
+            filename = QString::fromStdString(rulestr + std::to_string(add)) + ".df";
             QFile file(filename);
             if (!file.open(QIODevice::WriteOnly)) {
                 QMessageBox::information(this, tr("Unable to open file"),
@@ -380,24 +405,32 @@ void MainWindow::updatePixmap(const QImage &image, double scaleFactor) {
             thread_a.save_data(out);
             file.close();
 
-            filename = QString::fromStdString(rulestr) + ".txt";
+            filename = QString::fromStdString(rulestr + std::to_string(add)) + ".txt";
             QFile file2(filename);
             if (file2.open(QIODevice::ReadWrite)) {
                 QTextStream stream(&file2);
                 stream << QString::fromStdString(msg);
             }
             file2.close();
-            new_next_rule();
-        } else if (AutoAnalyzerNumOfTry != 0 && AutoAnalyzerTried < AutoAnalyzerNumOfTry) {
+
+            wait_window.close();
+            this->setEnabled(true);
+
+        }
+        if (AutoAnalyzerNumOfTry != 0 && AutoAnalyzerTried < AutoAnalyzerNumOfTry) {
             thread_a.new_rand(AutoAnalyzerRandSize);
             analyzer.clear();
-        } else {
+        } else if (need_new) {
             new_next_rule();
+        } else {
+            analyzer.setAutoAnalyzerEnabled(false);
+            AutoAnalyzerButtonBlocker(true);
+            return;
         }
         Sleeper::msleep(100);
         need_steps = AutoAnalyzerStepsNum;
         analyzer.setEnabled(true);
-        analyzer.setAutoAnalyzer(true);
+        analyzer.setAutoAnalyzerEnabled(true);
         start_action();
         render_again();
     }
@@ -622,8 +655,19 @@ void MainWindow::on_OnOffAnalyzer_clicked(bool checked)
 void MainWindow::on_Analyze_clicked()
 {
     pause(true);
+    if (analyzer.isAutoAnalyzerEnabled()) {
+        analyzer.setAutoAnalyzerEnabled(false);
+        AutoAnalyzerButtonBlocker(true);
+        return;
+    }
     size_t id = analyzer.analyze();
-    QMessageBox::information(this, tr("Info"), ("Cur info: " + std::to_string(id) + "\n" + analyzer.statistic(id, ColorsNum)).c_str());
+    if (id == 0) {
+        this->setEnabled(false);
+        need_new = false;
+        dialog.show();
+    } else {
+        QMessageBox::information(this, tr("Info"), ("Cur info: " + std::to_string(id) + "\n" + analyzer.statistic(id, ColorsNum)).c_str());
+    }
 }
 
 void MainWindow::on_Auto_clicked(bool checked)
@@ -631,11 +675,12 @@ void MainWindow::on_Auto_clicked(bool checked)
     pause(true);
     if (checked) {
         dialog.show();
+        need_new = true;
         this->setEnabled(false);
     } else {
         ui->AutoAnalyzerText->setText("");
         AutoAnalyzerButtonBlocker(true);
-        analyzer.setAutoAnalyzer(false);
+        analyzer.setAutoAnalyzerEnabled(false);
     }
 }
 
@@ -645,7 +690,7 @@ void MainWindow::show_and_restart() {
         return;
     }
     analyzer.setEnabled(false);
-    analyzer.setAutoAnalyzer(false);
+    analyzer.setAutoAnalyzerEnabled(false);
     on_pushButton_clicked();
     special = true;
 }
@@ -682,17 +727,27 @@ void MainWindow::AutoAnalyzerCanceled() {
     set_active();
 }
 
-void MainWindow::AutoAnalyzerButtonBlocker(bool b) {
+void MainWindow::AutoAnalyzerButtonBlocker(bool b, bool c) {
     ui->GoBack->setEnabled(b);
     ui->GoForward->setEnabled(b);
     ui->Stop->setEnabled(b);
-    ui->Analyze->setEnabled(b);
     ui->OnOffAnalyzer->setEnabled(b);
     ui->SaveMap->setEnabled(b);
     ui->LoadMap->setEnabled(b);
     ui->SavePic->setEnabled(b);
     ui->settingsButton->setEnabled(b);
     ui->stepsInput->setEnabled(b);
+    ui->Auto->setEnabled(b);
+    ui->Analyze->setEnabled(b);
+    if (c) {
+        if (need_new) {
+            ui->Auto->setEnabled(true);
+            ui->Analyze->setEnabled(false);
+        } else {
+            ui->Auto->setEnabled(false);
+            ui->Analyze->setEnabled(true);
+        }
+    }
 }
 
 void MainWindow::AutoAnalyzerStart(unsigned long long l, unsigned long long st, unsigned long long s, unsigned long long t) {
@@ -703,9 +758,9 @@ void MainWindow::AutoAnalyzerStart(unsigned long long l, unsigned long long st, 
     analyzer.clear();
     analyzer.setDataLength(st * 2);
     need_steps = AutoAnalyzerStepsNum;
-    analyzer.setAutoAnalyzer(true);
+    analyzer.setAutoAnalyzerEnabled(true);
     set_active();
-    AutoAnalyzerButtonBlocker(false);
+    AutoAnalyzerButtonBlocker(false, true);
     start_action();
     render_again();
 }

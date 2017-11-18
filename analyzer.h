@@ -19,12 +19,13 @@ private:
     size_t pos;
     size_t size;
     bool enabled;
-    bool autoAnalyzer;
+    bool autoAnalyzerEnabled;
 
 public:
     Analyzer() {
         data = std::vector<Node>();
         enabled = false;
+        autoAnalyzerEnabled = false;
         pos = 0;
         data_length = 10000;
         size = 0;
@@ -42,12 +43,12 @@ public:
         return enabled;
     }
 
-    void setAutoAnalyzer(bool enabled) {
-        autoAnalyzer = enabled;
+    void setAutoAnalyzerEnabled(bool enabled) {
+        autoAnalyzerEnabled = enabled;
     }
 
     bool isAutoAnalyzerEnabled() {
-        return autoAnalyzer;
+        return autoAnalyzerEnabled;
     }
 
     Node operator [] (size_t i) {

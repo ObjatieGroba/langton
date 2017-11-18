@@ -123,56 +123,102 @@ void ActionThread::set_steps(unsigned int steps) {
     mutex_a.unlock();
 }
 
+void ActionThread::loader_noncompressed(QDataStream &stream) {
+    quint32 AntX, AntY, AntWay, waysSize;
+    qint64 did_steps, need_steps;
+    stream >> waysSize;
+    std::vector<bool> tmp_ways(waysSize);
+    for (quint32 i = 0; i != waysSize; ++i) {
+        bool tmp;
+        stream >> tmp;
+        tmp_ways[i] = tmp;
+    }
+    stream >> AntX >> AntY >> AntWay >> did_steps >> need_steps;
+    quint64 dataSize;
+    stream >> dataSize;
+    quint32 minw, maxw, minh, maxh;
+    stream >> minw >> maxw >> minh >> maxh;
+    if (minw >= maxw || minh >= maxh) {
+        throw std::invalid_argument("invalid data");
+    }
+    if (data->size() != dataSize) {
+        data->clear();
+        *data = std::vector<std::vector<char>> (static_cast<size_t>(dataSize),
+                                               std::vector<char> (static_cast<size_t>(dataSize), 0));
+    } else {
+        for (size_t i = 0; i != data->size(); ++i) {
+            std::fill((*data)[i].begin(), (*data)[i].end(), 0);
+        }
+    }
+    for (quint32 i = minw; i != maxw; ++i) {
+        for (quint32 j = minh; j != maxh; ++j) {
+            quint8 tmp;
+            stream >> tmp;
+            (*data)[i][j] = tmp;
+        }
+    }
+    *(this->ways) = tmp_ways;
+    *(this->AntX) = AntX;
+    *(this->AntY) = AntY;
+    *(this->AntWay) = AntWay;
+    *(this->did_steps) = did_steps;
+    *(this->need_steps) = need_steps;
+}
+
+void ActionThread::loader_compressed(QDataStream &stream) {
+    quint32 AntX, AntY, AntWay, waysSize;
+    qint64 did_steps, need_steps;
+    stream >> waysSize;
+    std::vector<bool> tmp_ways(waysSize);
+    for (quint32 i = 0; i != waysSize; ++i) {
+        bool tmp;
+        stream >> tmp;
+        tmp_ways[i] = tmp;
+    }
+    stream >> AntX >> AntY >> AntWay >> did_steps >> need_steps;
+    quint64 dataSize;
+    stream >> dataSize;
+    if (data->size() != dataSize) {
+        data->clear();
+        *data = std::vector<std::vector<char>> (static_cast<size_t>(dataSize),
+                                               std::vector<char> (static_cast<size_t>(dataSize), 0));
+    } else {
+        for (size_t i = 0; i != data->size(); ++i) {
+            std::fill((*data)[i].begin(), (*data)[i].end(), 0);
+        }
+    }
+    quint8 color;
+    quint32 i, j;
+    quint64 size;
+    stream >> size;
+    for (quint64 c = 0; c != size; ++c) {
+        stream >> i >> j >> color;
+        (*data)[i][j] = color;
+    }
+    *(this->ways) = tmp_ways;
+    *(this->AntX) = AntX;
+    *(this->AntY) = AntY;
+    *(this->AntWay) = AntWay;
+    *(this->did_steps) = did_steps;
+    *(this->need_steps) = need_steps;
+}
+
 bool ActionThread::load_data(QDataStream &stream) {
     try {
         mutex_a.lock();
-        QString check;
-        quint32 AntX, AntY, AntWay, waysSize;
-        qint64 did_steps, need_steps;
-        stream >> check;
-        if (check != QString("LangtonAntDataFile v1.0")) {
+        QString file_version;
+        stream >> file_version;
+        if (file_version == QString("LangtonAntDataFile v1.0")) {
+            loader_noncompressed(stream);
             mutex_a.unlock();
-            return false;
-        }
-        stream >> waysSize;
-        std::vector<bool> tmp_ways(waysSize);
-        for (quint32 i = 0; i != waysSize; ++i) {
-            bool tmp;
-            stream >> tmp;
-            tmp_ways[i] = tmp;
-        }
-        stream >> AntX >> AntY >> AntWay >> did_steps >> need_steps;
-        quint64 dataSize;
-        stream >> dataSize;
-        quint32 minw, maxw, minh, maxh;
-        stream >> minw >> maxw >> minh >> maxh;
-        if (minw >= maxw || minh >= maxh) {
+            return true;
+        } else if (file_version == QString("LangtonAntDataFile v1.0c")) {
+            loader_compressed(stream);
             mutex_a.unlock();
-            return false;
+            return true;
         }
-        if (data->size() != dataSize) {
-            data->clear();
-            *data = std::vector<std::vector<char>> (static_cast<size_t>(dataSize),
-                                                   std::vector<char> (static_cast<size_t>(dataSize), 0));
-        } else {
-            for (size_t i = 0; i != data->size(); ++i) {
-                std::fill((*data)[i].begin(), (*data)[i].end(), 0);
-            }
-        }
-        for (quint32 i = minw; i != maxw; ++i) {
-            for (quint32 j = minh; j != maxh; ++j) {
-                quint8 tmp;
-                stream >> tmp;
-                (*data)[i][j] = tmp;
-            }
-        }
-        *(this->ways) = tmp_ways;
-        *(this->AntX) = AntX;
-        *(this->AntY) = AntY;
-        *(this->AntWay) = AntWay;
-        *(this->did_steps) = did_steps;
-        *(this->need_steps) = need_steps;
         mutex_a.unlock();
+        return false;
     } catch (...) {
         mutex_a.unlock();
         clear();
@@ -181,47 +227,85 @@ bool ActionThread::load_data(QDataStream &stream) {
     return true;
 }
 
+void ActionThread::saver_noncompressed(QDataStream &stream,
+                                       unsigned int minw, unsigned int maxw,
+                                       unsigned int minh, unsigned int maxh) {
+    stream << QString("LangtonAntDataFile v1.0");
+    stream << (quint32)(static_cast<unsigned int>(ways->size()));
+    for (auto elem : *ways) {
+        stream << elem;
+    }
+    stream << (quint32)(*AntX);
+    stream << (quint32)(*AntY);
+    stream << (quint32)(*AntWay);
+    stream << (qint64)(*did_steps);
+    stream << (qint64)(*need_steps);
+    stream << (quint64)(data->size());
+    stream << (quint32)minw;
+    stream << (quint32)maxw;
+    stream << (quint32)minh;
+    stream << (quint32)maxh;
+    for (unsigned int i = minw; i != maxw; ++i) {
+        for (unsigned int j = minh; j != maxh; ++j) {
+            stream << (quint8)((*data)[i][j]);
+        }
+    }
+}
+
+void ActionThread::saver_compressed(QDataStream &stream, unsigned long long size) {
+    stream << QString("LangtonAntDataFile v1.0c");
+    stream << (quint32)(static_cast<unsigned int>(ways->size()));
+    for (auto elem : *ways) {
+        stream << elem;
+    }
+    stream << (quint32)(*AntX);
+    stream << (quint32)(*AntY);
+    stream << (quint32)(*AntWay);
+    stream << (qint64)(*did_steps);
+    stream << (qint64)(*need_steps);
+    stream << (quint64)(data->size());
+    stream << (quint64)(size);
+    for (unsigned int i = 0; i != data->size(); ++i) {
+        for (unsigned int j = 0; j != data->size(); ++j) {
+            if ((*data)[i][j] != 0) {
+                stream << (quint32)(i);
+                stream << (quint32)(j);
+                stream << (quint8)((*data)[i][j]);
+            }
+        }
+    }
+}
+
 bool ActionThread::save_data(QDataStream &stream) {
     try {
         mutex_a.lock();
-        stream << QString("LangtonAntDataFile v1.0");
-        stream << (quint32)(static_cast<unsigned int>(ways->size()));
-        for (auto elem : *ways) {
-            stream << elem;
-        }
-        stream << (quint32)(*AntX);
-        stream << (quint32)(*AntY);
-        stream << (quint32)(*AntWay);
-        stream << (qint64)(*did_steps);
-        stream << (qint64)(*need_steps);
-        stream << (quint64)(data->size());
         bool first = true;
         unsigned int  minw = 0, maxw = 0, minh = 0, maxh = 0;
-        for (unsigned int i = 0; i != static_cast<unsigned int>(data->size()); ++i) {
-            for (unsigned int j = 0; j != static_cast<unsigned int>(data->size()); ++j) {
+        unsigned long long non_zero = 0;
+        for (unsigned int i = 0; i != data->size(); ++i) {
+            for (unsigned int j = 0; j != data->size(); ++j) {
                 if ((*data)[i][j] != 0) {
+                    ++non_zero;
                     if (first) {
                         minw = maxw = i;
                         minh = maxh = j;
                         first = false;
                     } else {
                         maxw = i;
-                        maxh = std::max(maxh, j);
-                        minh = std::min(minh, j);
+                        if (maxh < j) {
+                            maxh = j;
+                        }
+                        if (minh > j) {
+                            minh = j;
+                        }
                     }
                 }
             }
         }
-        ++maxw;
-        ++maxh;
-        stream << (quint32)minw;
-        stream << (quint32)maxw;
-        stream << (quint32)minh;
-        stream << (quint32)maxh;
-        for (unsigned int i = minw; i != maxw; ++i) {
-            for (unsigned int j = minh; j != maxh; ++j) {
-                stream << (quint8)((*data)[i][j]);
-            }
+        if ((unsigned long long)(maxh - minh) * (unsigned long long)(maxw - minw) <= non_zero * 9) {
+            saver_noncompressed(stream, minw, ++maxw, minh, ++maxh);
+        } else {
+            saver_compressed(stream, non_zero);
         }
         mutex_a.unlock();
     } catch (...) {
@@ -233,19 +317,19 @@ bool ActionThread::save_data(QDataStream &stream) {
 
 void ActionThread::run() {
     forever {
-        if (*AntX == 0 || *AntY == 0 || *AntX == static_cast<unsigned int>(data->size() - 1) || *AntY == static_cast<unsigned int>(data->size()) - 1) {
-            if (*need_steps >= *did_steps) {
-                need_stop = true;
-                *need_steps = *did_steps;
-            }
-        }
         //qDebug((std::to_string(*need_steps) + " " + std::to_string(*did_steps)).c_str());
         mutex_a.lock();
         for (unsigned int i = 0; i != steps; ++i) {
             if (need_stop) {
                 break;
             }
-            //qDebug("ok");
+            if (*AntX == 0 || *AntY == 0 || *AntX == static_cast<unsigned int>(data->size() - 1) || *AntY == static_cast<unsigned int>(data->size()) - 1) {
+                if (*need_steps >= *did_steps) {
+                    need_stop = true;
+                    break;
+                    *need_steps = *did_steps;
+                }
+            }
             if (*need_steps > *did_steps) {
                 if (analyzer->isEnabled()) {
                     (*analyzer).add(*AntX, *AntY, *AntWay, (*data)[*AntX][*AntY]);

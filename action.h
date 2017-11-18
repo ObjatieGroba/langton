@@ -28,7 +28,13 @@ public:
                   long long * did_steps, long long * need_steps, bool * sync, Analyzer * analyzer);
 
     bool save_data(QDataStream& stream);
+    void saver_noncompressed(QDataStream &stream,
+                             unsigned int minw, unsigned int maxw,
+                             unsigned int minh, unsigned int maxh);
+    void saver_compressed(QDataStream &stream, unsigned long long size);
     bool load_data(QDataStream& stream);
+    void loader_noncompressed(QDataStream &stream);
+    void loader_compressed(QDataStream &stream);
 
 signals:
     void did();
